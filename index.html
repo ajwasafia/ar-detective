@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>AR Detective — Versi 4 FIXED iOS 2</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#111}
+#hud{position:fixed;z-index:20;top:12px;left:12px;right:12px;pointer-events:none}
+.card{background:rgba(10,12,16,.88);color:white;border:2px solid #fff;border-radius:16px;padding:12px 14px;box-shadow:0 5px 25px #0008}
+.title{font-weight:900;font-size:18px}.sub{font-size:12px;opacity:.8;margin-top:3px}.progress{margin-top:9px;height:8px;background:#333;border-radius:99px;overflow:hidden}.bar{height:100%;width:0;background:#fff;transition:.3s}
+#status{margin-top:8px;font-size:13px}.pill{display:inline-block;border:1px solid #aaa;border-radius:999px;padding:4px 8px;margin-right:5px;font-size:11px}
+#modal,#start{position:fixed;z-index:30;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);padding:22px}
+.panel{max-width:520px;width:100%;background:#f7f7f7;border-radius:22px;padding:22px;box-sizing:border-box;color:#151515}.panel h2{margin:0 0 8px}.panel p{line-height:1.45}.opt{display:block;width:100%;text-align:left;margin:9px 0;padding:13px;border-radius:12px;border:2px solid #bbb;background:white;font-size:16px}.opt:active{transform:scale(.99)}
+button.primary{width:100%;padding:14px;border:0;border-radius:13px;background:#111;color:#fff;font-size:16px;font-weight:800}
+#done{position:fixed;z-index:40;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:22px;color:#fff;text-align:center}.donebox{max-width:520px;width:100%;border:2px solid #fff;border-radius:22px;padding:28px;background:#111}
+#hint{position:fixed;z-index:20;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 14px;border-radius:999px;font-size:12px;text-align:center;max-width:85%;pointer-events:none}
+</style>
+<script>
+const cases=[
+ {name:'BUKU', clue:'Cari objek yang mempunyai halaman dan digunakan untuk membaca.', q:'Apakah fungsi utama buku?', o:['Untuk membaca','Untuk menunjukkan masa','Untuk duduk'], a:0},
+ {name:'PEN', clue:'Cari alat kecil yang digunakan untuk menghasilkan tulisan.', q:'Apakah fungsi utama pen?', o:['Untuk menyimpan buku','Untuk menulis','Untuk duduk'], a:1},
+ {name:'JAM DINDING', clue:'Cari objek bulat yang membantu kita mengetahui masa.', q:'Apakah kegunaan jam?', o:['Menunjukkan masa','Menyimpan alat tulis','Menulis pada papan'], a:0},
+ {name:'KERUSI', clue:'Cari tempat duduk yang mempunyai penyandar.', q:'Apakah kegunaan kerusi?', o:['Untuk duduk','Untuk membaca sahaja','Untuk menulis masa'], a:0},
+ {name:'PAPAN PUTIH', clue:'Cari permukaan besar tempat guru menulis dan menerangkan pelajaran.', q:'Apakah kegunaan papan putih?', o:['Menyimpan buku','Menulis dan menerangkan pelajaran','Menunjukkan masa'], a:1},
+ {name:'BEG SEKOLAH', clue:'Cari objek yang digunakan untuk membawa buku dan alat tulis.', q:'Apakah kegunaan beg sekolah?', o:['Membawa buku dan alat tulis','Menunjukkan masa','Tempat duduk'], a:0},
+ {name:'POKOK', clue:'Cari tumbuhan kecil yang diletakkan di dalam pasu.', q:'Apakah warna yang lazim bagi daun tumbuhan?', o:['Hijau','Ungu','Hitam'], a:0}
+];
+let current=0,score=0;
+function setHud(){document.getElementById('count').textContent=current+'/7';document.getElementById('score').textContent=score;document.getElementById('bar').style.width=(current/7*100)+'%';document.getElementById('clue').textContent=current<7?cases[current].clue:'Kes selesai!';}
+function openQuestion(i){if(i!==current)return;const c=cases[i];document.getElementById('qTitle').textContent='🔎 SUSPEK: '+c.name;document.getElementById('question').textContent=c.q;const box=document.getElementById('options');box.innerHTML='';c.o.forEach((x,j)=>{const b=document.createElement('button');b.className='opt';b.textContent=String.fromCharCode(65+j)+'. '+x;b.onclick=()=>answer(j);box.appendChild(b)});document.getElementById('modal').style.display='flex';}
+function answer(j){const c=cases[current];if(j===c.a){score++;current++;document.getElementById('feedback').textContent='✓ Betul! Clue seterusnya telah dibuka.';setHud();setTimeout(()=>{document.getElementById('modal').style.display='none';if(current>=7)finish();},650)}else{document.getElementById('feedback').textContent='✗ Belum tepat. Cuba lagi berdasarkan clue.';}}
+function finish(){document.getElementById('done').style.display='flex';document.getElementById('finalScore').textContent=score+'/7';}
+async function start(){
+  const btn=document.querySelector('#start button');
+  const old=btn.textContent;
+  btn.disabled=true;
+  btn.textContent='MEMINTA AKSES KAMERA...';
+  try{
+    // iOS Safari requires a user gesture before requesting motion permission.
+    if(typeof DeviceMotionEvent!=='undefined' && typeof DeviceMotionEvent.requestPermission==='function'){
+      const motion=await DeviceMotionEvent.requestPermission();
+      if(motion!=='granted') throw new Error('Akses sensor pergerakan tidak dibenarkan.');
+    }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error('Pelayar ini tidak menyediakan akses kamera.');
+    }
+    // Ask for camera explicitly from the MULA SIASATAN button.
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    stream.getTracks().forEach(t=>t.stop());
+    sessionStorage.setItem('ar_permission_ok','1');
+    // AR.js has already been created by A-Frame; reload now so AR.js starts
+    // after iOS has granted the camera permission.
+    location.reload();
+  }catch(err){
+    btn.disabled=false;
+    btn.textContent=old;
+    alert('Akses kamera/sensor belum berjaya. Sila pilih Allow. Jika masih gagal, semak Settings > Safari > Camera = Allow, kemudian tutup dan buka semula Safari.');
+    console.error(err);
+  }
+}
+window.addEventListener('load',()=>{
+  setHud();
+  document.getElementById('start').style.display='flex';
+  if(sessionStorage.getItem('ar_permission_ok')==='1'){
+    document.getElementById('start').style.display='none';
+    sessionStorage.removeItem('ar_permission_ok');
+  }
+});
+</script>
+</head>
+<body>
+<div id="hud"><div class="card"><div class="title">🕵️ AR DETECTIVE: MISTERI 7 OBJEK</div><div class="sub">FAIL KES #007 · Imbas kad sasaran untuk membuka bilik darjah</div><div class="progress"><div id="bar" class="bar"></div></div><div id="status"><span class="pill">Clue <b id="count">0/7</b></span><span class="pill">Markah <b id="score">0</b></span></div><div id="clue" style="margin-top:8px">Arahkan kamera pada kad sasaran.</div></div></div>
+<div id="hint">📷 Arahkan kamera kepada gambar “FAIL KES #007” sehingga bilik darjah muncul.</div>
+
+<div id="start"><div class="panel"><h2>🗂️ Fail Kes #007</h2><p><b>Objektif:</b> Siasat 7 objek tersembunyi dalam bilik darjah.</p><p>1. Cetak atau buka gambar sasaran pada skrin lain.<br>2. Benarkan akses kamera.<br>3. Arahkan kamera kepada gambar sasaran.<br>4. Apabila bilik darjah muncul, cari objek berdasarkan clue.</p><button class="primary" onclick="start()">MULA SIASATAN</button></div></div>
+
+<div id="modal"><div class="panel"><h2 id="qTitle">SUSPEK</h2><p id="question"></p><div id="options"></div><p id="feedback" style="font-weight:800"></p></div></div>
+<div id="done"><div class="donebox"><h1>🎉 KES SELESAI!</h1><p>Semua 7 objek telah disiasat.</p><h2>MARKAH: <span id="finalScore">0/7</span></h2><button class="primary" onclick="location.reload()">MAIN SEMULA</button></div></div>
+
+<a-scene embedded vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" renderer="colorManagement:true; precision:mediump; alpha:true" arjs="sourceType: webcam; facingMode: environment; debugUIEnabled:false; detectionMode: mono; matrixCodeType: 3x3; patternRatio: 0.8" cursor="rayOrigin: mouse" raycaster="objects: .clickable; far: 20">
+  <a-assets>
+    <a-asset-item id="none"></a-asset-item>
+  </a-assets>
+  <a-marker type="pattern" url="FAIL_KES_007.patt" id="caseMarker" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+    <!-- FLOOR -->
+    <a-box position="0 0 -1.8" rotation="0 0 0" width="6" height="0.12" depth="4" material="color:#777;roughness:.9"></a-box>
+    <!-- BACK WALL / WHITEBOARD -->
+    <a-box position="0 2 -3.75" width="6" height="4" depth="0.12" material="color:#e9e9e9"></a-box>
+    <a-box position="0 2 -3.67" width="2.8" height="1.5" depth="0.08" material="color:#fafafa"></a-box>
+    <a-box position="0 2 -3.60" width="2.55" height="1.25" depth="0.03" material="color:#dff4ff"></a-box>
+    <a-text value="PAPAN PUTIH" align="center" width="3" color="#222" position="0 2 -3.54"></a-text>
+    <!-- WINDOW -->
+    <a-box position="-2.4 2.2 -3.55" width="1.3" height="1.5" depth="0.08" material="color:#bde5ff"></a-box>
+    <a-box position="-2.4 2.2 -3.47" width=".08" height="1.5" depth=".04" material="color:#444"></a-box>
+    <a-box position="-2.4 2.2 -3.47" width="1.3" height=".08" depth=".04" material="color:#444"></a-box>
+    <!-- DESKS -->
+    <a-box position="-1.6 .75 -1.5" width="1.2" height=".12" depth=".75" material="color:#9b6b43"></a-box><a-box position="-1.95 .35 -1.72" width=".08" height=".75" depth=".08" material="color:#444"></a-box><a-box position="-1.25 .35 -1.72" width=".08" height=".75" depth=".08" material="color:#444"></a-box>
+    <a-box position="1.6 .75 -1.5" width="1.2" height=".12" depth=".75" material="color:#9b6b43"></a-box><a-box position="1.25 .35 -1.72" width=".08" height=".75" depth=".08" material="color:#444"></a-box><a-box position="1.95 .35 -1.72" width=".08" height=".75" depth=".08" material="color:#444"></a-box>
+    <!-- CLOCK -->
+    <a-cylinder position="2.2 2.9 -3.5" rotation="90 0 0" radius=".38" height=".08" material="color:#222"></a-cylinder>
+    <a-cylinder position="2.2 2.9 -3.43" rotation="90 0 0" radius=".30" height=".03" material="color:#fff"></a-cylinder>
+    <a-box position="2.2 3.02 -3.38" width=".025" height=".23" depth=".03" material="color:#111"></a-box>
+    <a-box position="2.28 2.9 -3.38" width=".18" height=".025" depth=".03" rotation="0 0 -35" material="color:#111"></a-box>
+    <!-- BOOK -->
+    <a-box id="objBook" class="clickable" position="-1.6 .88 -1.5" width=".58" height=".07" depth=".42" material="color:#d94b5b"></a-box>
+    <a-box position="-1.6 .925 -1.5" width=".48" height=".012" depth=".32" material="color:#fff"></a-box>
+    <!-- PEN -->
+    <a-cylinder id="objPen" class="clickable" position="1.55 .94 -1.48" radius=".035" height=".55" rotation="0 0 90" material="color:#2563eb"></a-cylinder>
+    <!-- CHAIR -->
+    <a-box id="objChair" class="clickable" position="-1.6 .48 -.65" width=".7" height=".1" depth=".65" material="color:#c88952"></a-box>
+    <a-box position="-1.88 .92 -.92" width=".7" height=".85" depth=".1" material="color:#c88952"></a-box>
+    <!-- BAG -->
+    <a-box id="objBag" class="clickable" position="2.0 .65 -2.8" width=".65" height=".85" depth=".35" material="color:#8b5cf6"></a-box>
+    <a-box position="2.0 .55 -2.59" width=".42" height=".3" depth=".04" material="color:#6d28d9"></a-box>
+    <!-- PLANT -->
+    <a-cylinder id="objPlant" class="clickable" position="-2.2 .45 -2.9" radius=".25" height=".5" material="color:#b86b3e"></a-cylinder>
+    <a-cylinder position="-2.2 1.05 -2.9" radius=".045" height=".8" material="color:#2f7d32"></a-cylinder>
+    <a-sphere position="-2.38 1.28 -2.9" radius=".25" scale="1 .55 .35" material="color:#3a9d3a"></a-sphere>
+    <a-sphere position="-2.02 1.38 -2.9" radius=".25" scale="1 .55 .35" material="color:#3a9d3a"></a-sphere>
+    <!-- WHITEBOARD clickable hotspot -->
+    <a-box id="objBoard" class="clickable" position="0 2 -3.48" width="2.5" height="1.2" depth=".04" material="opacity:0;transparent:true"></a-box>
+    <!-- LABEL -->
+    <a-text value="BILIK DARJAH" align="center" width="4" color="#222" position="0 3.55 -3.45"></a-text>
+  </a-marker>
+  <a-entity camera></a-entity>
+</a-scene>
+<script>
+const map={objBook:0,objPen:1,objChair:3,objBag:5,objPlant:6,objBoard:4};
+Object.keys(map).forEach(id=>document.getElementById(id).addEventListener('click',()=>openQuestion(map[id])));
+document.getElementById('caseMarker').addEventListener('markerFound',()=>{document.getElementById('hint').textContent='✅ Sasaran dikesan! Cari objek berdasarkan clue.';});
+document.getElementById('caseMarker').addEventListener('markerLost',()=>{document.getElementById('hint').textContent='📷 Arahkan kamera semula kepada kad sasaran.';});
+// Clock is a grouped object; use the visible clock area as an invisible clickable hotspot.
+const clock=document.createElement('a-box');clock.id='objClock';clock.className='clickable';clock.setAttribute('position','2.2 2.9 -3.42');clock.setAttribute('width','.8');clock.setAttribute('height','.8');clock.setAttribute('depth','.1');clock.setAttribute('material','opacity:0;transparent:true');document.getElementById('caseMarker').appendChild(clock);clock.addEventListener('click',()=>openQuestion(2));
+</script>
+</body></html>
