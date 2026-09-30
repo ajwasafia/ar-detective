@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>AR Detective: Misteri 7 Objek</title>
+
+<!-- ================== 1. LIBRARIES ================== -->
+<script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;background:transparent;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;touch-action:none}
+#sceneBox{width:100%;height:100%}
+.ui{position:fixed;z-index:50}
+#hud{top:calc(8px + env(safe-area-inset-top));left:8px;background:rgba(21,52,110,.88);color:#fff;padding:6px 12px;border-radius:12px;font-size:14px;font-weight:700;min-width:170px;display:none;line-height:1.3}
+#hud small{display:block;color:#ffd23f;font-size:11px;letter-spacing:.5px}
+#bar{height:5px;background:rgba(255,255,255,.3);border-radius:3px;margin-top:4px;overflow:hidden}
+#barIn{height:100%;width:0;background:#ffd23f;transition:width .3s}
+#rescan{top:calc(8px + env(safe-area-inset-top));right:8px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(21,52,110,.88);font-size:22px;display:none}
+#clue,#hint{left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(92vw,520px);background:rgba(255,255,255,.96);border-left:7px solid #ffd23f;border-radius:12px;padding:8px 12px;font-size:15px;color:#15346e;display:none}
+#hint{border-left-color:#ef476f}
+#toast{top:calc(62px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:70;background:rgba(0,0,0,.78);color:#fff;padding:7px 16px;border-radius:20px;font-weight:700;max-width:92vw;text-align:center;display:none;pointer-events:none}
+#quiz{left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(94vw,470px);background:#fff;border:4px solid #2f80ed;border-radius:18px;padding:10px 12px 12px;display:none;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+#qTitle{font-size:12px;font-weight:700;color:#ef476f}
+#qText{font-size:17px;font-weight:700;color:#15346e;margin:2px 0 8px}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{border:0;border-radius:12px;padding:12px 8px;font-size:15px;font-weight:600;text-align:left;background:#e6f0ff;color:#15346e;font-family:inherit}
+.opt.bad{background:#ffb3c1}.opt.good{background:#a7f0ba}
+#fb{min-height:22px;text-align:center;font-weight:800;font-size:16px;margin-top:6px;color:#15346e}
+.full{inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:20px;text-align:center;color:#fff}
+#start{background:linear-gradient(160deg,#15346e,#2f80ed 60%,#06d6a0);display:flex}
+#end{background:rgba(21,52,110,.6)}
+.card{max-width:460px}
+.card h1{font-size:34px;margin:6px 0 0;line-height:1.05}
+.card h2{margin:4px 0 12px;color:#ffd23f;font-size:20px}
+.card ol{text-align:left;font-size:15px;line-height:1.6;background:rgba(255,255,255,.14);border-radius:14px;padding:10px 12px 10px 34px;margin:0 0 16px}
+.big{border:0;border-radius:16px;background:#ffd23f;color:#15346e;font-size:20px;font-weight:800;padding:14px 30px;font-family:inherit}
+#final{font-size:54px;font-weight:800;color:#ffd23f}
+</style>
+</head>
+<body>
+<div id="sceneBox"></div>
+
+<div id="hud" class="ui">AR DETECTIVE<small id="hudTxt"></small><div id="bar"><div id="barIn"></div></div></div>
+<button id="rescan" class="ui" title="Imbas semula penanda">🎯</button>
+<div id="toast" class="ui"></div>
+<div id="hint" class="ui">📷 Halakan kamera ke gambar <b>FAIL KES #007</b> sehingga bilik darjah muncul.</div>
+<div id="clue" class="ui">🔎 <span id="clueTxt"></span></div>
+<div id="quiz" class="ui"><div id="qTitle"></div><div id="qText"></div><div id="opts"></div><div id="fb"></div></div>
+
+<div id="start" class="ui full"><div class="card">
+  <div style="font-size:56px">🕵️</div>
+  <h1>AR DETECTIVE</h1><h2>MISTERI 7 OBJEK · Fail Kes #007</h2>
+  <ol><li>Tekan MULA SIASATAN.</li><li>Benarkan kamera.</li><li>Imbas gambar FAIL KES #007.</li><li>Cari objek berdasarkan clue.</li><li>Tekan objek yang betul.</li><li>Jawab soalan.</li><li>Lengkapkan semua kes.</li></ol>
+  <button id="startBtn" class="big">MULA SIASATAN</button>
+</div></div>
+
+<div id="end" class="ui full"><div class="card">
+  <div style="font-size:52px">🎉</div><h1>SIASATAN SELESAI!</h1>
+  <h2>Anda telah menemui semua objek.</h2>
+  <div>Markah:</div><div id="final"></div><br>
+  <button id="againBtn" class="big">MAIN SEMULA</button>
+</div></div>
+
+<script>
+// ==================================================
+// 2. CONFIGURATION
+// ==================================================
+const CFG = {
+  baseScale: 0.2,     // saiz awal bilik darjah berbanding penanda
+  zoomMin: 0.15,      // zoom keluar (semakin kecil = semakin jauh)
+  zoomMax: 4,         // zoom masuk
+  tapMove: 12,        // px: gerak kurang daripada ini = TAP
+  tapTime: 600,       // ms: masa maksimum untuk TAP
+  markerUrl: 'FAIL_KES_007.patt'
+};
+
+// ==================================================
+// GURU: EDIT SOALAN DI SINI
+// ==================================================
+// Ubah clue, soalan, pilihan jawapan dan jawapan betul.
+// Tidak perlu ubah kod AR, touch atau bilik darjah.
+// object mesti salah satu ID ini: book, pen, clock, chair, whiteboard, bag, plant
+// answer = nombor pilihan betul bermula 0 (0=A, 1=B, 2=C, 3=D)
+// Urutan dalam senarai ini ialah urutan permainan. Boleh tambah soalan baharu.
+// ==================================================
+const gameQuestions = [
+  { id: 1, object: "book", objectName: "Buku",
+    clue: "Cari objek yang mempunyai halaman dan digunakan untuk membaca.",
+    question: "Apakah fungsi utama buku?",
+    options: ["Untuk memasak", "Untuk membaca", "Untuk tidur", "Untuk bermain"], answer: 1 },
+  { id: 2, object: "pen", objectName: "Pen",
+    clue: "Cari alat kecil yang digunakan untuk menghasilkan tulisan.",
+    question: "Apakah kegunaan pen?",
+    options: ["Untuk menulis", "Untuk makan", "Untuk duduk", "Untuk melihat masa"], answer: 0 },
+  { id: 3, object: "clock", objectName: "Jam",
+    clue: "Cari objek yang menunjukkan waktu.",
+    question: "Apakah fungsi jam?",
+    options: ["Menunjukkan masa", "Untuk membaca", "Untuk menulis", "Untuk menyimpan buku"], answer: 0 },
+  { id: 4, object: "chair", objectName: "Kerusi",
+    clue: "Cari objek yang digunakan untuk duduk.",
+    question: "Apakah kegunaan kerusi?",
+    options: ["Untuk menulis", "Untuk duduk", "Untuk memasak", "Untuk melihat masa"], answer: 1 },
+  { id: 5, object: "whiteboard", objectName: "Papan Putih",
+    clue: "Cari tempat guru menulis dan menerangkan pelajaran.",
+    question: "Apakah kegunaan papan putih?",
+    options: ["Menulis dan menerangkan pelajaran", "Menyimpan kasut", "Untuk duduk", "Membawa buku"], answer: 0 },
+  { id: 6, object: "bag", objectName: "Beg Sekolah",
+    clue: "Cari objek yang digunakan untuk membawa buku dan alat tulis.",
+    question: "Apakah fungsi beg sekolah?",
+    options: ["Untuk duduk", "Membawa buku dan alat tulis", "Menunjukkan masa", "Untuk menulis di papan"], answer: 1 },
+  { id: 7, object: "plant", objectName: "Pokok",
+    clue: "Cari benda hidup yang biasanya mempunyai daun berwarna hijau.",
+    question: "Apakah bahagian tumbuhan yang biasanya berwarna hijau?",
+    options: ["Akar", "Batang", "Daun", "Biji"], answer: 2 }
+];
+
+// ==================================================
+// 4. GAME STATE
+// ==================================================
+const $ = id => document.getElementById(id);
+const S = { idx: 0, score: 0, placed: false, seen: 0, quizOpen: false, done: false, lock: false, zoom: 1, yaw: 0 };
+let scene, mk, stage, rotG;
+const hits = [];   // hanya hitbox 7 objek utama (raycast hanya ke sini)
+
+// ==================================================
+// 5. AR INITIALIZATION (kamera dibuka SEKALI sahaja, selepas tekan butang)
+// ==================================================
+function startAR() {
+  $('sceneBox').innerHTML =
+    '<a-scene embedded vr-mode-ui="enabled:false" ' +
+    'device-orientation-permission-ui="enabled:false" light="defaultLightsEnabled:false" ' +
+    'renderer="antialias:false;alpha:true;precision:mediump" ' +
+    'arjs="trackingMethod:best;sourceType:webcam;debugUIEnabled:false;detectionMode:mono;maxDetectionRate:30;canvasWidth:640;canvasHeight:480">' +
+    '<a-marker id="mk" type="pattern" url="' + CFG.markerUrl + '" smooth="true" smoothCount="5"></a-marker>' +
+    '<a-entity camera></a-entity></a-scene>';
+  scene = $('sceneBox').firstChild;
+  mk = $('mk');
+  const init = () => { buildRoom(); setInterval(tryPlace, 150); };
+  if (scene.hasLoaded) init(); else scene.addEventListener('loaded', init);
+}
+window.addEventListener('camera-error', () => toast('Kamera tidak dapat dibuka. Benarkan akses kamera untuk Safari di Tetapan.', 6000));
+
+// Marker hanya untuk INITIAL PLACEMENT: transform disalin sekali, kemudian marker diabaikan.
+function tryPlace() {
+  if (S.placed) return;
+  if (!mk.object3D.visible) { S.seen = 0; return; }
+  if (++S.seen < 3) return;              // tunggu marker stabil (~0.45s)
+  const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
+  mk.object3D.matrixWorld.decompose(p, q, s);
+  stage.position.copy(p); stage.quaternion.copy(q);
+  S.zoom = 1; S.yaw = 0; rotG.rotation.y = 0; applyZoom();
+  stage.visible = true; S.placed = true;
+  $('hint').style.display = 'none'; $('rescan').style.display = 'block';
+  if (!S.done) $('clue').style.display = 'block';
+  toast('Bilik darjah ditemui! 🔍');
+}
+
+// ==================================================
+// 6. CLASSROOM CREATION (dibina SEKALI sahaja)
+// ==================================================
+const THREE = AFRAME.THREE;
+const mats = {};
+const M = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c }));
+function add(p, g, m, x, y, z) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); p.add(o); return o; }
+const bx = (p, w, h, d, c, x, y, z) => add(p, new THREE.BoxGeometry(w, h, d), M(c), x, y, z);
+const cy = (p, rt, rb, h, c, x, y, z, s) => add(p, new THREE.CylinderGeometry(rt, rb, h, s || 14), M(c), x, y, z);
+function tex(w, h, fn) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  fn(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
+}
+function flat(p, w, h, t, x, y, z, ry) {
+  const o = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: t }));
+  o.position.set(x, y, z); o.rotation.y = ry || 0; p.add(o); return o;
+}
+function poster(text, bg, fg, w, h) {
+  return tex(256, Math.round(256 * h / w), (g, W, H) => {
+    g.fillStyle = bg; g.fillRect(0, 0, W, H); g.strokeStyle = fg; g.lineWidth = 8; g.strokeRect(6, 6, W - 12, H - 12);
+    g.fillStyle = fg; g.textAlign = 'center'; g.font = 'bold 34px Arial';
+    const L = text.split('|'); L.forEach((s, i) => g.fillText(s, W / 2, H / 2 + (i - (L.length - 1) / 2) * 44 + 12));
+  });
+}
+function hb(id, p, w, h, d, x, y, z) {   // invisible hitbox (lebih besar daripada model)
+  const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ visible: false }));
+  o.position.set(x, y, z); o.userData.id = id; p.add(o); hits.push(o);
+}
+const NOTE_COL = ['#ffd23f', '#ff8fab', '#7bdff2', '#b2f7a3', '#ffb570'];
+function notes(g, x0, y0, n, per, sz) {
+  for (let i = 0; i < n; i++) {
+    g.save(); g.translate(x0 + (i % per) * (sz + 12), y0 + Math.floor(i / per) * (sz + 10)); g.rotate(((i * 7) % 5 - 2) * .04);
+    g.fillStyle = NOTE_COL[i % 5]; g.fillRect(0, 0, sz, sz); g.fillStyle = 'rgba(0,0,0,.35)';
+    g.fillRect(6, sz * .35, sz - 12, 3); g.fillRect(6, sz * .6, sz - 22, 3); g.restore();
+  }
+}
+
+function buildRoom() {
+  stage = new THREE.Group(); stage.visible = false;
+  rotG = new THREE.Group(); stage.add(rotG); scene.object3D.add(stage);
+  stage.add(new THREE.AmbientLight(0xffffff, 0.95));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.55); dl.position.set(2, 6, 3); stage.add(dl);
+  const R = rotG;
+
+  // --- Lantai ---
+  const ft = tex(128, 128, g => { g.fillStyle = '#f6e7c1'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#d9ebf7'; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64); });
+  ft.wrapS = ft.wrapT = THREE.RepeatWrapping; ft.repeat.set(4, 3);
+  const fl = add(R, new THREE.PlaneGeometry(8, 6), new THREE.MeshLambertMaterial({ map: ft }), 0, 0, 0); fl.rotation.x = -Math.PI / 2;
+
+  // --- 4 dinding (satu muka, menghadap ke dalam: dinding dekat kamera lut sinar bila dilihat dari luar) ---
+  [[8, 0, -3, 0, '#fff3b0'], [8, 0, 3, Math.PI, '#ffd6e0'], [6, -4, 0, Math.PI / 2, '#bfe3ff'], [6, 4, 0, -Math.PI / 2, '#c9f2c7']]
+    .forEach(w => { add(R, new THREE.PlaneGeometry(w[0], 3), M(w[4]), w[1], 1.5, w[2]).rotation.y = w[3]; });
+  const wall = (s, a, y, w, h, t) => {
+    if (s === 'F') return flat(R, w, h, t, a, y, -2.97, 0);
+    if (s === 'B') return flat(R, w, h, t, a, y, 2.97, Math.PI);
+    if (s === 'L') return flat(R, w, h, t, -3.97, y, a, Math.PI / 2);
+    return flat(R, w, h, t, 3.97, y, a, -Math.PI / 2);
+  };
+
+  // --- Hiasan dinding ---
+  wall('F', 0, 2.72, 3.6, .4, tex(360, 40, (g, W, H) => { g.fillStyle = '#ef476f'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; g.font = 'bold 28px Arial'; g.textAlign = 'center'; g.fillText('★ JOM BELAJAR! ★', W / 2, 30); }));
+  wall('L', -.9, 1.7, 1.6, 1.1, tex(256, 176, (g, W, H) => { g.fillStyle = '#c8935a'; g.fillRect(0, 0, W, H); g.strokeStyle = '#8a5a2b'; g.lineWidth = 12; g.strokeRect(0, 0, W, H); notes(g, 20, 18, 8, 4, 48); }));
+  wall('L', .55, 1.8, .7, .95, poster('GOOD|JOB!|⭐', '#fff59d', '#e63946', .7, .95));
+  wall('L', 1.9, 1.1, 1.1, 2.2, tex(110, 220, (g, W, H) => { g.fillStyle = '#b5651d'; g.fillRect(0, 0, W, H); g.fillStyle = '#8f4f14'; g.fillRect(12, 70, 86, 130); g.fillStyle = '#9fdcff'; g.fillRect(24, 14, 62, 44); g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(88, 120, 7, 0, 7); g.fill(); }));
+  const win = tex(256, 224, (g, W, H) => { g.fillStyle = '#8fd3ff'; g.fillRect(0, 0, W, H); g.fillStyle = '#fff'; [[60, 70, 26], [90, 62, 20], [190, 110, 22], [166, 104, 16]].forEach(c => { g.beginPath(); g.arc(c[0], c[1], c[2], 0, 7); g.fill(); }); g.strokeStyle = '#fafafa'; g.lineWidth = 14; g.strokeRect(0, 0, W, H); g.beginPath(); g.moveTo(W / 2, 0); g.lineTo(W / 2, H); g.moveTo(0, H / 2); g.lineTo(W, H / 2); g.stroke(); });
+  wall('R', -1.5, 1.8, 1.4, 1.2, win); wall('R', 1.0, 1.8, 1.4, 1.2, win);
+  wall('R', -.25, 1.8, .8, 1.0, poster('SAINS|🔬', '#c8f7dc', '#118ab2', .8, 1));
+  wall('R', 2.4, 1.8, .8, 1.0, poster('MATEMATIK|1+2=3', '#ffe0b2', '#e76f51', .8, 1));
+  wall('B', -2.8, 1.8, .9, 1.1, poster('BAHASA|MELAYU', '#e1d5ff', '#6a4c93', .9, 1.1));
+  wall('B', 2.8, 1.8, .9, 1.1, poster('A B C D|1 2 3 4|USAHA|TANGGA|KEJAYAAN', '#ffffff', '#2f80ed', .9, 1.1));
+
+  // --- PAPAN PUTIH (whiteboard) ---
+  bx(R, 3.6, 1.6, .1, '#8d99ae', 0, 1.65, -2.94);
+  flat(R, 3.4, 1.4, tex(512, 212, (g, W, H) => { g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.textAlign = 'left'; g.font = 'bold 44px Arial'; g.fillStyle = '#2f80ed'; g.fillText('Hari ini: SAINS', 24, 66); g.fillStyle = '#e63946'; g.fillText('2 + 3 = 5', 24, 130); g.fillStyle = '#06d6a0'; g.fillText('🌱  📖  ✏️', 24, 190); notes(g, 380, 20, 4, 2, 52); }), 0, 1.65, -2.88, 0);
+  bx(R, 3.2, .06, .16, '#8d99ae', 0, .82, -2.85);
+  hb('whiteboard', R, 3.6, 1.7, .5, 0, 1.65, -2.72);
+
+  // --- JAM (analog, besar, rendah) ---
+  const ck = new THREE.Group(); ck.position.set(2.6, 1.75, -2.96); R.add(ck);
+  flat(ck, .8, .8, tex(256, 256, (g, W) => { g.fillStyle = '#fff'; g.fillRect(0, 0, W, W); g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#1d3557'; g.font = 'bold 34px Arial'; for (let i = 1; i <= 12; i++) { const a = i * Math.PI / 6; g.fillText(i, 128 + Math.sin(a) * 92, 128 - Math.cos(a) * 92); } for (let i = 0; i < 60; i++) { const a = i * Math.PI / 30, r = i % 5 ? 118 : 112; g.fillRect(128 + Math.sin(a) * r - 1, 128 - Math.cos(a) * r - 1, 3, 3); } }), 0, 0, .03, 0);
+  add(ck, new THREE.CircleGeometry(.4, 24), M('#ffffff'), 0, 0, .02);
+  add(ck, new THREE.TorusGeometry(.41, .045, 8, 28), M('#1d3557'), 0, 0, .03);
+  const hand = (len, w, deg, c, z) => { const gm = new THREE.BoxGeometry(w, len, .015); gm.translate(0, len / 2, 0); const h = add(ck, gm, M(c), 0, 0, z); h.rotation.z = -deg * Math.PI / 180; };
+  hand(.2, .04, 305, '#1d3557', .05); hand(.3, .03, 60, '#1d3557', .06); hand(.32, .012, 180, '#e63946', .07);
+  cy(ck, .03, .03, .03, '#e63946', 0, 0, .075, 10).rotation.x = Math.PI / 2;
+  hb('clock', ck, 1.1, 1.1, .5, 0, 0, .2);
+
+  // --- Meja guru + barang kecil ---
+  const tg = new THREE.Group(); tg.position.set(0, 0, -1.95); R.add(tg);
+  bx(tg, 1.7, .08, .8, '#a0522d', 0, .78, 0); bx(tg, .5, .5, .7, '#8b4513', .55, .49, 0);
+  [[-.78, -.34], [.78, -.34], [-.78, .34], [.78, .34]].forEach(l => cy(tg, .04, .04, .74, '#5c3317', l[0], .37, l[1], 8));
+  bx(tg, .3, .05, .4, '#2a9d8f', -.55, .845, 0); bx(tg, .3, .04, .22, '#e63946', -.1, .84, .1);
+  cy(tg, .015, .015, .3, '#1e88e5', .2, .83, .18, 8).rotation.z = Math.PI / 2;
+  cy(tg, .08, .07, .16, '#ffd23f', .6, .9, -.15, 12); ['#e63946', '#06d6a0', '#2f80ed'].forEach((c, i) => { const s = cy(tg, .01, .01, .22, c, .57 + i * .03, .99, -.15, 6); s.rotation.z = (i - 1) * .25; });
+
+  // --- Meja murid (6) + kerusi (6) ---
+  const CC = ['#e63946', '#2a9d8f', '#f4a261', '#457b9d', '#e9c46a', '#8e6bbf'];
+  function chair(x, z, c, id) {
+    const g = new THREE.Group(); g.position.set(x, 0, z); R.add(g);
+    bx(g, .5, .06, .5, c, 0, .46, 0); bx(g, .5, .5, .06, c, 0, .75, .22);
+    [[-.2, -.2], [.2, -.2], [-.2, .2], [.2, .2]].forEach(l => cy(g, .03, .03, .46, '#555b66', l[0], .23, l[1], 8));
+    if (id) hb(id, g, .9, 1.25, .9, 0, .62, 0.05);
+  }
+  let n = 0;
+  [[-2.2, 0], [0, 0], [2.2, 0], [-2.2, 1.7], [0, 1.7], [2.2, 1.7]].forEach(d => {
+    const g = new THREE.Group(); g.position.set(d[0], 0, d[1]); R.add(g);
+    bx(g, 1.3, .07, .8, '#d9a05b', 0, .76, 0); bx(g, 1.2, .04, .7, '#c48a42', 0, .6, 0);
+    [[-.58, -.34], [.58, -.34], [-.58, .34], [.58, .34]].forEach(l => cy(g, .035, .035, .76, '#6b7a8f', l[0], .38, l[1], 8));
+    chair(d[0], d[1] + .68, CC[n], n === 1 ? 'chair' : null); n++;
+  });
+
+  // --- BUKU (meja kiri) ---
+  const bk = new THREE.Group(); bk.position.set(-2.2, .795, .05); bk.rotation.y = -.3; R.add(bk);
+  bx(bk, .56, .025, .42, '#e63946', 0, .0125, 0); bx(bk, .52, .06, .38, '#fff8e1', .01, .055, 0);
+  bx(bk, .56, .025, .42, '#e63946', 0, .0975, 0); bx(bk, .03, .11, .42, '#a4161a', -.265, .055, 0);
+  bx(bk, .3, .006, .14, '#ffd23f', 0, .112, 0);
+  hb('book', bk, .9, .35, .7, 0, .12, 0);
+
+  // --- PEN (meja kanan) ---
+  const pn = new THREE.Group(); pn.position.set(2.2, .83, .05); pn.rotation.y = .5; R.add(pn);
+  cy(pn, .028, .028, .5, '#1e88e5', 0, 0, 0, 10).rotation.z = Math.PI / 2;
+  add(pn, new THREE.ConeGeometry(.028, .1, 10), M('#333333'), .3, 0, 0).rotation.z = -Math.PI / 2;
+  cy(pn, .034, .034, .15, '#ffd23f', -.32, 0, 0, 10).rotation.z = Math.PI / 2;
+  bx(pn, .16, .012, .02, '#cfd8dc', -.3, .04, 0); cy(pn, .032, .032, .03, '#cfd8dc', .2, 0, 0, 10).rotation.z = Math.PI / 2;
+  hb('pen', pn, .95, .3, .55, 0, .05, 0);
+
+  // --- BEG SEKOLAH (backpack, di sebelah meja) ---
+  const bg = new THREE.Group(); bg.position.set(-1.1, 0, .35); bg.rotation.y = .5; R.add(bg);
+  bx(bg, .42, .55, .25, '#e91e63', 0, .3, 0); cy(bg, .21, .21, .25, '#e91e63', 0, .575, 0, 16).rotation.x = Math.PI / 2;
+  bx(bg, .34, .26, .08, '#ffd23f', 0, .2, .16); bx(bg, .3, .02, .09, '#b8860b', 0, .3, .16);
+  bx(bg, .06, .45, .04, '#7b1fa2', -.12, .34, -.14); bx(bg, .06, .45, .04, '#7b1fa2', .12, .34, -.14);
+  add(bg, new THREE.TorusGeometry(.07, .015, 6, 12), M('#7b1fa2'), 0, .8, 0);
+  bx(bg, .07, .3, .1, '#c2185b', -.24, .2, .03); bx(bg, .07, .3, .1, '#c2185b', .24, .2, .03);
+  hb('bag', bg, .75, .95, .65, 0, .42, 0);
+
+  // --- POKOK dalam pasu (sudut kelas) ---
+  const pl = new THREE.Group(); pl.position.set(-3.3, 0, -2.35); R.add(pl);
+  cy(pl, .26, .19, .4, '#c8693a', 0, .2, 0); cy(pl, .24, .24, .03, '#4e342e', 0, .4, 0); cy(pl, .05, .07, .5, '#7b4a2d', 0, .65, 0, 8);
+  [['#43a047', 0, 1.15, 0, .38], ['#66bb6a', .25, .95, .1, .26], ['#2e7d32', -.24, 1.0, -.08, .27], ['#81c784', .05, 1.5, .05, .24]]
+    .forEach(f => add(pl, new THREE.IcosahedronGeometry(f[4], 1), M(f[0]), f[1], f[2], f[3]));
+  hb('plant', pl, 1.1, 1.9, 1.1, 0, .95, 0);
+
+  // --- Rak buku (dinding belakang) ---
+  const sh = new THREE.Group(); sh.position.set(0, 0, 2.82); R.add(sh);
+  bx(sh, 2.2, 1.8, .05, '#8d5a2b', 0, .9, .12); bx(sh, .05, 1.8, .3, '#8d5a2b', -1.075, .9, 0); bx(sh, .05, 1.8, .3, '#8d5a2b', 1.075, .9, 0);
+  [.02, .6, 1.2, 1.78].forEach(y => bx(sh, 2.2, .04, .3, '#a86a35', 0, y, 0));
+  [.04, .62, 1.22].forEach((y0, r) => { for (let i = 0; i < 10; i++) { const h = .34 + ((i * 7 + r) % 4) * .04; bx(sh, .11, h, .2, CC[(i + r) % 6], -.95 + i * .19, y0 + h / 2 + .02, 0); } });
+
+  hb; // (semua hitbox sudah didaftarkan dalam array hits)
+}
+
+// ==================================================
+// 8. HITBOX / RAYCASTING (hanya ke hitbox 7 objek: meja, lantai & dinding tidak menghalang)
+// ==================================================
+const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+function pick(cx, cy2) {
+  if (S.quizOpen || S.done || !S.placed) return;
+  const cam = scene.camera;
+  cam.updateMatrixWorld(); cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+  v2.set(cx / innerWidth * 2 - 1, -(cy2 / innerHeight) * 2 + 1);
+  ray.setFromCamera(v2, cam);
+  stage.updateMatrixWorld(true);
+  const h = ray.intersectObjects(hits, false)[0];
+  if (!h) return;
+  if (h.object.userData.id === gameQuestions[S.idx].object) openQuiz();
+  else toast('Bukan objek yang dicari.');
+}
+
+// ==================================================
+// 9. TOUCH GESTURES (bezakan TAP / DRAG / PINCH)
+// ==================================================
+const G = { on: false, sx: 0, sy: 0, lx: 0, ly: 0, t0: 0, moved: false, multi: false, pd: 0, mx: 0, my: 0 };
+const isUI = e => e.target.closest && e.target.closest('.ui');
+function two(e) {
+  const a = e.touches[0], b = e.touches[1];
+  G.pd = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  G.mx = (a.clientX + b.clientX) / 2; G.my = (a.clientY + b.clientY) / 2;
+}
+document.addEventListener('touchstart', e => {
+  if (isUI(e)) return;
+  e.preventDefault();
+  if (e.touches.length === 1) {
+    const t = e.touches[0]; G.on = true; G.sx = G.lx = t.clientX; G.sy = G.ly = t.clientY;
+    G.t0 = Date.now(); G.moved = false; G.multi = false;
+  } else if (G.on) { G.multi = true; two(e); }
+}, { passive: false });
+document.addEventListener('touchmove', e => {
+  if (!G.on) return; e.preventDefault();
+  if (!S.placed) return;
+  if (e.touches.length >= 2) {
+    const a = e.touches[0], b = e.touches[1], d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const mx = (a.clientX + b.clientX) / 2, my = (a.clientY + b.clientY) / 2;
+    if (G.pd > 0) zoomBy(d / G.pd);           // 10-11. ZOOM
+    panBy(mx - G.mx, my - G.my);              // 12. PAN
+    G.pd = d; G.mx = mx; G.my = my; G.moved = true; return;
+  }
+  const t = e.touches[0];
+  if (!G.moved && Math.hypot(t.clientX - G.sx, t.clientY - G.sy) < CFG.tapMove) return;   // masih TAP
+  if (G.multi) { G.lx = t.clientX; G.ly = t.clientY; G.multi = false; G.moved = true; return; }
+  G.moved = true;
+  rotateBy(t.clientX - G.lx);                  // 10. ROTATION (1 jari)
+  G.lx = t.clientX; G.ly = t.clientY;
+}, { passive: false });
+document.addEventListener('touchend', e => {
+  if (!G.on) return;
+  if (e.touches.length === 1) { G.lx = e.touches[0].clientX; G.ly = e.touches[0].clientY; G.moved = true; return; }
+  if (e.touches.length === 0) {
+    const t = e.changedTouches[0];
+    if (!G.moved && !G.multi && Date.now() - G.t0 < CFG.tapTime) pick(t.clientX, t.clientY);   // TAP
+    G.on = false;
+  }
+}, { passive: false });
+document.addEventListener('touchcancel', () => { G.on = false; });
+['gesturestart', 'gesturechange'].forEach(n => document.addEventListener(n, e => e.preventDefault()));
+
+// ==================================================
+// 10. ROTATION   11. ZOOM   12. PAN
+// ==================================================
+function rotateBy(dx) { S.yaw += dx * 0.008; rotG.rotation.y = S.yaw; }
+function applyZoom() { stage.scale.setScalar(CFG.baseScale * S.zoom); }
+function zoomBy(f) { S.zoom = Math.min(CFG.zoomMax, Math.max(CFG.zoomMin, S.zoom * f)); applyZoom(); }
+function panBy(dx, dy) {
+  const k = Math.max(0.3, -stage.position.z) * 0.95 / innerHeight;
+  stage.position.x += dx * k; stage.position.y -= dy * k;
+}
+
+// ==================================================
+// 13. QUIZ SYSTEM
+// ==================================================
+function showClue() {
+  const q = gameQuestions[S.idx];
+  $('clueTxt').textContent = 'Clue ' + (S.idx + 1) + '/' + gameQuestions.length + ': ' + q.clue;
+  if (S.placed && !S.done) $('clue').style.display = 'block';
+  updateHUD();
+}
+function openQuiz() {
+  const q = gameQuestions[S.idx]; S.quizOpen = true;
+  $('qTitle').textContent = '🔍 Kes: ' + q.objectName;
+  $('qText').textContent = q.question; $('fb').textContent = '';
+  const o = $('opts'); o.innerHTML = '';
+  q.options.forEach((t, i) => {
+    const b = document.createElement('button'); b.className = 'opt';
+    b.textContent = 'ABCDEFGH'[i] + '. ' + t;
+    b.addEventListener('click', () => answer(i, b)); o.appendChild(b);
+  });
+  $('clue').style.display = 'none'; $('quiz').style.display = 'block';
+}
+function answer(i, b) {
+  if (S.lock) return;
+  const q = gameQuestions[S.idx];
+  if (i === q.answer) {                         // jawapan betul (question.answer)
+    S.lock = true; b.classList.add('good'); $('fb').textContent = 'BETUL! 🎉';
+    S.score++; updateHUD();                     // 14. SCORE
+    setTimeout(() => {
+      $('quiz').style.display = 'none'; S.quizOpen = false; S.lock = false; S.idx++;
+      if (S.idx >= gameQuestions.length) finish(); else { toast('Clue seterusnya...'); showClue(); }
+    }, 1100);
+  } else { b.classList.add('bad'); $('fb').textContent = 'Cuba lagi!'; }
+}
+function finish() {
+  S.done = true; $('clue').style.display = 'none'; updateHUD();
+  $('final').textContent = S.score + '/' + gameQuestions.length; $('end').style.display = 'flex';
+}
+
+// ==================================================
+// 15. UI
+// ==================================================
+function updateHUD() {
+  const N = gameQuestions.length;
+  $('hudTxt').textContent = 'Clue ' + Math.min(S.idx + 1, N) + '/' + N + '  |  ⭐ ' + S.score;
+  $('barIn').style.width = (S.idx / N * 100) + '%';
+}
+let tt;
+function toast(m, ms) {
+  const t = $('toast'); t.textContent = m; t.style.display = 'block';
+  clearTimeout(tt); tt = setTimeout(() => t.style.display = 'none', ms || 1600);
+}
+$('startBtn').addEventListener('click', () => {
+  $('start').style.display = 'none'; $('hud').style.display = 'block'; $('hint').style.display = 'block';
+  updateHUD(); startAR();
+});
+$('rescan').addEventListener('click', () => {   // letak semula bilik darjah pada penanda
+  S.placed = false; S.seen = 0; stage.visible = false; $('rescan').style.display = 'none';
+  $('clue').style.display = 'none'; $('hint').style.display = 'block';
+});
+
+// ==================================================
+// 16. PERFORMANCE: geometri primitif, Lambert, tekstur kecil, tiada bayang/post-processing,
+// bilik dibina sekali; tiada objek dicipta dalam loop.
+// ==================================================
+
+// ==================================================
+// 17. GAME RESET
+// ==================================================
+$('againBtn').addEventListener('click', () => {
+  S.idx = 0; S.score = 0; S.done = false; S.lock = false; S.quizOpen = false;
+  $('end').style.display = 'none'; $('quiz').style.display = 'none';
+  showClue();
+});
+showClue();
+</script>
+</body>
+</html>
