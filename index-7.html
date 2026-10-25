@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Misi Mencari Pelaku: Misteri Peti Amanah yang Hilang</title>
+<style>
+:root{
+  --navy:#0e1a33; --navy2:#16284d; --brown:#5a3b22; --brown2:#7a5230;
+  --gold:#e3b341; --gold2:#f6d884; --paper:#fbf6e8; --ink:#1b1b1b;
+  --ok:#2e9e5b; --bad:#c0392b;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:var(--paper);
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 2px,transparent 2px 46px),
+    radial-gradient(circle at 20% 0%,var(--navy2),var(--navy) 60%);
+  background-attachment:fixed;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+}
+.wrap{max-width:900px;margin:0 auto;padding:18px 16px 40px}
+h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(24px,5vw,38px);margin:0 0 4px;color:var(--gold2);line-height:1.15}
+.sub{margin:0 0 16px;opacity:.85;font-size:clamp(15px,2.4vw,18px)}
+.file{background:var(--paper);color:var(--ink);border-radius:6px 22px 6px 6px;padding:22px 20px 20px;position:relative;border-top:14px solid var(--brown2);box-shadow:0 10px 26px rgba(0,0,0,.4)}
+.file::before{content:"FAIL SULIT";position:absolute;top:-14px;right:18px;background:var(--bad);color:#fff;font-size:12px;font-weight:bold;padding:3px 10px;border-radius:0 0 6px 6px;letter-spacing:1px}
+.hidden{display:none!important}
+.bar{display:flex;gap:6px;margin-bottom:14px}
+.dot{flex:1;height:10px;border-radius:6px;background:#d9cfb5;transition:background .4s}
+.dot.done{background:var(--gold)}.dot.now{background:var(--brown2)}
+.misi{font-weight:bold;color:var(--brown);font-size:clamp(15px,2.4vw,18px);margin:0 0 6px}
+.tanya{font-size:clamp(19px,3.4vw,26px);font-weight:bold;margin:0 0 14px;line-height:1.35}
+.pern{font-family:Georgia,serif;font-size:clamp(19px,3.2vw,25px);background:#fff;border-left:6px solid var(--gold);padding:14px;border-radius:8px;margin:0 0 14px;line-height:1.4}
+.opsyen{display:grid;gap:12px}
+.btn{font:inherit;font-size:clamp(17px,3vw,22px);text-align:left;width:100%;min-height:64px;padding:14px 18px;border-radius:14px;border:3px solid var(--navy2);background:#fff;color:var(--ink);cursor:pointer;touch-action:manipulation;transition:transform .12s,background .2s}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+.btn b{display:inline-block;width:34px;height:34px;line-height:34px;text-align:center;border-radius:50%;background:var(--navy2);color:var(--gold2);margin-right:12px}
+.btn.salah{background:#fde3df;border-color:var(--bad);animation:goyang .4s}
+.btn.betul{background:#dff5e7;border-color:var(--ok)}
+.btn:disabled{cursor:default}
+.btn.tengah{text-align:center}
+@keyframes goyang{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.maklum{min-height:30px;margin:14px 0 0;font-weight:bold;font-size:clamp(17px,2.8vw,21px)}
+.maklum.s{color:var(--bad)}.maklum.b{color:var(--ok)}
+.penerang{margin:6px 0 0;font-size:clamp(16px,2.6vw,19px);color:#333}
+.petunjuk-baru{margin-top:14px;background:var(--navy);color:var(--gold2);border:3px dashed var(--gold);border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;font-size:clamp(17px,2.8vw,22px);animation:timbul .7s cubic-bezier(.2,1.4,.4,1)}
+.petunjuk-baru .ik{font-size:38px;animation:kanta 1.2s ease-in-out 2}
+@keyframes timbul{from{transform:scale(.4) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes kanta{50%{transform:scale(1.3) rotate(-15deg)}}
+.seterus{margin-top:14px;background:var(--gold);border-color:var(--brown);font-weight:bold;text-align:center}
+.koleksi{margin-top:18px;background:rgba(255,255,255,.07);border:2px solid var(--brown2);border-radius:14px;padding:12px 14px}
+.koleksi h2{margin:0 0 8px;font-size:clamp(17px,2.8vw,20px);color:var(--gold2)}
+.koleksi ul,.senarai{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.koleksi li,.senarai li{display:flex;gap:10px;align-items:center;border-radius:10px;padding:9px 12px;font-size:clamp(16px,2.6vw,19px)}
+.koleksi li.ada{background:var(--paper);color:var(--ink);animation:timbul .5s}
+.koleksi li.kosong{background:rgba(255,255,255,.08);color:#9fb0d0}
+.senarai li{background:var(--navy);color:var(--gold2);border:2px solid var(--gold)}
+.tengah-teks{text-align:center}
+.besar{font-size:64px;margin:4px 0}
+.arahan{background:var(--navy);color:var(--gold2);border-radius:12px;padding:14px;font-weight:bold;font-size:clamp(17px,2.8vw,22px);margin:16px 0;line-height:1.4}
+.baris{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.baris{grid-template-columns:1fr}}
+.modal{position:fixed;inset:0;background:rgba(5,10,25,.85);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal .file{width:100%;max-width:560px;max-height:90vh;overflow:auto}
+.bunyi{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;width:52px;height:52px;border-radius:50%;border:3px solid var(--gold);background:var(--navy);color:var(--gold2);font-size:24px;cursor:pointer;touch-action:manipulation}
+.bunyi:focus-visible{outline:4px solid var(--gold2);outline-offset:2px}
+.wrap{position:relative}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="bunyi" id="btnBunyi" aria-label="Hidupkan atau matikan bunyi" title="Bunyi">🔊</button>
+  <h1 style="padding-right:64px">🕵️ Misi Mencari Pelaku</h1>
+  <p class="sub">Misteri Peti Amanah yang Hilang</p>
+
+  <section id="skrinMula" class="file tengah-teks">
+    <div class="besar">✉️🔍</div>
+    <h2 style="font-family:Georgia,serif;margin:0 0 8px">Selamat datang, detektif!</h2>
+    <p style="font-size:clamp(17px,2.8vw,21px);line-height:1.5">Peti amanah sekolah telah hilang! Jawab enam soalan kata majmuk dengan betul. Setiap jawapan betul membuka satu petunjuk tentang individu yang menyembunyikan peti itu.</p>
+    <button class="btn seterus" id="btnMula">MULAKAN MISI</button>
+  </section>
+
+  <section id="skrinSoal" class="file hidden">
+    <div class="bar" id="bar"></div>
+    <p class="misi" id="tajuk"></p>
+    <p class="tanya" id="soalan"></p>
+    <p class="pern hidden" id="pernyataan"></p>
+    <div class="opsyen" id="opsyen"></div>
+    <p class="maklum" id="maklum" role="status" aria-live="polite"></p>
+    <p class="penerang" id="penerang"></p>
+    <div id="kotakPetunjuk"></div>
+    <button class="btn seterus hidden" id="btnSeterus"></button>
+  </section>
+
+  <section id="skrinRingkas" class="file hidden">
+    <div class="tengah-teks"><div class="besar">🗂️</div>
+    <h2 style="font-family:Georgia,serif;margin:0">Enam petunjuk berjaya dikumpulkan!</h2></div>
+    <ul class="senarai" id="senaraiAkhir" style="margin-top:14px"></ul>
+    <div class="arahan">Detektif sekalian, gunakan keenam-enam petunjuk ini untuk mengenal pasti pelaku dalam aktiviti Canva yang disediakan oleh guru.</div>
+    <div class="baris">
+      <button class="btn tengah" id="btnSemula">🔎 LIHAT SEMULA PETUNJUK</button>
+      <button class="btn tengah seterus" id="btnTamat" style="margin-top:0">TAMAT MISI</button>
+    </div>
+  </section>
+
+  <section id="skrinTamat" class="file hidden tengah-teks">
+    <div class="besar">🎖️</div>
+    <h2 style="font-family:Georgia,serif;margin:0 0 8px">Misi tamat. Syabas, detektif!</h2>
+    <p style="font-size:clamp(17px,2.8vw,21px)">Teruskan ke aktiviti Canva bersama guru anda.</p>
+    <button class="btn seterus" id="btnUlang">MAIN SEMULA</button>
+  </section>
+
+  <aside class="koleksi hidden" id="koleksi">
+    <h2>📂 Petunjuk yang dikumpul</h2>
+    <ul id="senaraiPetunjuk"></ul>
+  </aside>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="file">
+    <h2 style="font-family:Georgia,serif;margin:0 0 10px">Semakan petunjuk</h2>
+    <ul class="senarai" id="senaraiModal"></ul>
+    <button class="btn seterus" id="btnTutup">TUTUP</button>
+  </div>
+</div>
+
+<script>
+/* ============ KANDUNGAN YANG BOLEH DISUNTING GURU ============ */
+const TETAPAN = {
+  rawakanPilihan: true,                 // true = susunan A/B/C diacak; false = ikut susunan asal
+  mesejSalah: "Belum tepat, detektif! Cuba lagi.",
+  mesejBetul: "Hebat, detektif! Jawapan anda tepat."
+};
+
+/* jenis: "pilih" (pilihan A/B/C) atau "betulsalah"
+   betul: indeks jawapan betul (bermula 0) */
+const MISI = [
+  { jenis:"pilih", tajuk:"MISI 1: PILIH AYAT YANG BETUL",
+    soalan:"Pilih ayat yang menggunakan kata majmuk dengan betul.",
+    pilihan:[
+      "Ibu bapa perlu mendidik anak-anak dengan nilai integriti.",
+      "Ibubapa perlu mendidik anak-anak dengan nilai integriti.",
+      "Ibu-bapa perlu mendidik anak-anak dengan nilai integriti."],
+    betul:0,
+    penerangan:"Kata majmuk “ibu bapa” dieja sebagai dua perkataan, tanpa sengkang.",
+    petunjuk:"Individu yang dicari ialah seorang lelaki." },
+
+  { jenis:"pilih", tajuk:"MISI 2: PILIH AYAT YANG BETUL",
+    soalan:"Pilih ayat yang menggunakan kata majmuk dengan betul.",
+    pilihan:[
+      "Kita perlu bekerjasama untuk menyelesaikan tugasan.",
+      "Kita perlu bekerja sama untuk menyelesaikan tugasan.",
+      "Kita perlu bekerja-sama untuk menyelesaikan tugasan."],
+    betul:0,
+    penerangan:"Kata majmuk mantap “bekerjasama” dieja sebagai satu perkataan.",
+    petunjuk:"Individu tersebut mempunyai rambut pendek." },
+
+  { jenis:"pilih", tajuk:"MISI 3: PILIH AYAT YANG BETUL",
+    soalan:"Pilih ayat yang menggunakan kata majmuk kiasan dengan betul.",
+    pilihan:[
+      "Amir ringan tulang membantu gurunya mengangkat buku.",
+      "Amir ringan-tulang membantu gurunya mengangkat buku.",
+      "Amir ringantulang membantu gurunya mengangkat buku."],
+    betul:0,
+    penerangan:"Kata majmuk kiasan “ringan tulang” dieja sebagai dua perkataan.",
+    petunjuk:"Individu tersebut memakai cermin mata." },
+
+  { jenis:"betulsalah", tajuk:"MISI 4: AYAT BETUL ATAU SALAH?",
+    soalan:"Adakah penggunaan kata majmuk dalam ayat ini betul?",
+    pernyataan:"“Pekerja itu menerima makan suap untuk merahsiakan kesalahan rakannya.”",
+    pilihan:["Betul","Salah"], betul:0,
+    penerangan:"Kata majmuk kiasan “makan suap” dieja sebagai dua perkataan.",
+    petunjuk:"Individu tersebut memakai baju merah." },
+
+  { jenis:"betulsalah", tajuk:"MISI 5: AYAT BETUL ATAU SALAH?",
+    soalan:"Adakah penggunaan kata majmuk dalam ayat ini betul?",
+    pernyataan:"“Kita tidak boleh campur-tangan dalam urusan orang lain tanpa sebab.”",
+    pilihan:["Betul","Salah"], betul:1,
+    penerangan:"Kata majmuk kiasan “campur tangan” dieja sebagai dua perkataan.",
+    petunjuk:"Individu tersebut bukan seorang perempuan." },
+
+  { jenis:"pilih", tajuk:"MISI 6: PILIH KATA MAJMUK YANG SESUAI",
+    soalan:"Pilih kata majmuk yang paling sesuai untuk melengkapkan ayat berikut.",
+    pernyataan:"“Individu yang rajin membantu orang lain boleh digambarkan sebagai seorang yang ______.”",
+    pilihan:["ringan tulang","makan angin","panjang tangan"], betul:0,
+    penerangan:"“Ringan tulang” bermaksud rajin membantu.",
+    petunjuk:"Individu tersebut tidak memakai baju biru." }
+];
+/* ============ TAMAT KANDUNGAN GURU ============ */
+
+const $ = id => document.getElementById(id);
+const HURUF = ["A","B","C","D"];
+const IKON = ["🔍","✉️","🗝️","📌","🧩","🕵️"];
+let kini = 0, terkumpul = [], terkunci = false;
+
+/* ---- Bunyi (dijana dengan Web Audio, tiada fail luar) ---- */
+let ctx = null, bunyiHidup = true;
+function nota(frek, mula, tempoh, jenis, kuat){
+  const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + mula;
+  o.type = jenis; o.frequency.setValueAtTime(frek, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(kuat, t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+tempoh);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t+tempoh+0.05);
+}
+function mainBunyi(jenis){
+  if(!bunyiHidup) return;
+  try{
+    ctx = ctx || new (window.AudioContext||window.webkitAudioContext)();
+    if(ctx.state==="suspended") ctx.resume();
+    if(jenis==="betul"){            // tiga nota naik: C-E-G-C
+      [523.25,659.25,783.99,1046.5].forEach((f,i)=>nota(f, i*0.11, 0.28, "triangle", 0.28));
+    } else {                        // dua nota turun, lembut
+      nota(330, 0, 0.22, "sine", 0.3); nota(220, 0.18, 0.38, "sine", 0.3);
+    }
+  }catch(e){}
+}
+$("btnBunyi").onclick = ()=>{
+  bunyiHidup = !bunyiHidup;
+  $("btnBunyi").textContent = bunyiHidup ? "🔊" : "🔇";
+  if(bunyiHidup) mainBunyi("betul");
+};
+
+function tunjuk(id){
+  ["skrinMula","skrinSoal","skrinRingkas","skrinTamat"].forEach(s=>$(s).classList.toggle("hidden", s!==id));
+  $("koleksi").classList.toggle("hidden", id==="skrinMula"||id==="skrinTamat");
+  window.scrollTo({top:0});
+}
+function acak(a){ const b=a.slice(); for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; }
+
+function lukisKoleksi(){
+  $("senaraiPetunjuk").innerHTML = MISI.map((m,i)=> i<terkumpul.length
+    ? `<li class="ada">${IKON[i]} <span><b>Petunjuk ${i+1}:</b> ${m.petunjuk}</span></li>`
+    : `<li class="kosong">🔒 Petunjuk ${i+1}: belum dibuka</li>`).join("");
+}
+
+function paparSoalan(){
+  const m = MISI[kini]; terkunci = false;
+  $("bar").innerHTML = MISI.map((_,i)=>`<div class="dot ${i<kini?"done":i===kini?"now":""}"></div>`).join("");
+  $("tajuk").textContent = m.tajuk;
+  $("soalan").textContent = m.soalan;
+  const p = $("pernyataan");
+  if(m.pernyataan){ p.textContent = m.pernyataan; p.classList.remove("hidden"); } else p.classList.add("hidden");
+  $("maklum").textContent=""; $("maklum").className="maklum";
+  $("penerang").textContent=""; $("kotakPetunjuk").innerHTML="";
+  $("btnSeterus").classList.add("hidden");
+
+  let susun = m.pilihan.map((t,i)=>({t,betul:i===m.betul}));
+  if(TETAPAN.rawakanPilihan && m.jenis==="pilih") susun = acak(susun);
+  $("opsyen").innerHTML = "";
+  susun.forEach((o,i)=>{
+    const b = document.createElement("button");
+    b.className = "btn" + (m.jenis==="betulsalah" ? " tengah" : "");
+    b.innerHTML = m.jenis==="pilih" ? `<b>${HURUF[i]}</b>${o.t}` : o.t;
+    b.onclick = ()=> jawab(b,o.betul);
+    $("opsyen").appendChild(b);
+  });
+  lukisKoleksi();
+}
+
+function jawab(btn,betul){
+  if(terkunci) return;
+  const m = MISI[kini];
+  if(!betul){
+    mainBunyi("salah");
+    btn.classList.add("salah");
+    $("maklum").textContent = TETAPAN.mesejSalah; $("maklum").className="maklum s";
+    setTimeout(()=>btn.classList.remove("salah"),450);
+    return;
+  }
+  terkunci = true;
+  mainBunyi("betul");
+  btn.classList.add("betul");
+  document.querySelectorAll("#opsyen .btn").forEach(b=>b.disabled=true);
+  terkumpul.push(m.petunjuk);
+  $("maklum").textContent = "✅ " + TETAPAN.mesejBetul; $("maklum").className="maklum b";
+  $("penerang").textContent = m.penerangan;
+  $("kotakPetunjuk").innerHTML = `<div class="petunjuk-baru"><span class="ik">${IKON[kini]}</span><span><b>Petunjuk baharu ditemui!</b><br>${m.petunjuk}</span></div>`;
+  const s = $("btnSeterus");
+  s.textContent = kini<MISI.length-1 ? "MISI SETERUSNYA ▶" : "LIHAT RINGKASAN PETUNJUK ▶";
+  s.classList.remove("hidden");
+  lukisKoleksi();
+}
+
+function paparRingkasan(){
+  $("senaraiAkhir").innerHTML = MISI.map((m,i)=>`<li>${IKON[i]} <span><b>Petunjuk ${i+1}:</b> ${m.petunjuk}</span></li>`).join("");
+  tunjuk("skrinRingkas");
+  $("koleksi").classList.add("hidden");
+}
+
+$("btnMula").onclick = ()=>{ kini=0; terkumpul=[]; tunjuk("skrinSoal"); paparSoalan(); };
+$("btnSeterus").onclick = ()=>{ if(kini<MISI.length-1){ kini++; paparSoalan(); window.scrollTo({top:0}); } else paparRingkasan(); };
+$("btnSemula").onclick = ()=>{ $("senaraiModal").innerHTML = $("senaraiAkhir").innerHTML; $("modal").classList.remove("hidden"); };
+$("btnTutup").onclick = ()=> $("modal").classList.add("hidden");
+$("btnTamat").onclick = ()=> tunjuk("skrinTamat");
+$("btnUlang").onclick = ()=> tunjuk("skrinMula");
+</script>
+</body>
+</html>
